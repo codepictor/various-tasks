@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdint.h>
 
-const char fat_img_path[] = "fat.img";
+const char fat_img_path[] = "fat.img";  // path to the file containing fat16 file system
 
 
 void CheckRetValue       (const int ret_value, const char* const error_description);

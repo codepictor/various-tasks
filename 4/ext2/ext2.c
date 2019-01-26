@@ -19,7 +19,7 @@
 
 
 
-const char     ext2_img_path[] = "ext2.img";
+const char     ext2_img_path[] = "ext2.img";  // path to the file containing ext2 file system
 const uint32_t inode = 12;
 
 
