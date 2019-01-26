@@ -51,3 +51,4 @@ print("Volume of hyper cube is equal to \(hyperCube.volume).")
 hyperCube.edgeLength = 6.0
 print("New volume of hyper cube is equal to \(hyperCube.volume).")
 hyperCube.volume = 256.0
+
