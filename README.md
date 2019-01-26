@@ -1,2 +1,3 @@
 # various-tasks
-The repository contains various tasks and small projects
+The repository contains various small tasks
+

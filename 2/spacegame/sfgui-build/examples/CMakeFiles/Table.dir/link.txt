@@ -1,0 +1,1 @@
+/usr/bin/c++   -std=c++11 -Wall -Wextra -Wshadow -Wconversion -Wsign-conversion -Wunused-parameter -Wno-long-long -pedantic    CMakeFiles/Table.dir/Table.cpp.o  -o Table -rdynamic ../lib/libsfgui.so -lsfml-graphics -lsfml-window -lsfml-system -lGL -lSM -lICE -lX11 -lXext -Wl,-rpath,/home/artem/artem/MIPT/infa/project/sfgui-build/lib: 
