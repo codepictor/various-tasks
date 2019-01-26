@@ -1,0 +1,25 @@
+## @file
+#  TODO: Brief Description of Package HelloEfi
+#  
+#  TODO: Detailed Description of Package HelloEfi
+#
+#  TODO: Copyright for Pacvkage HelloEfi
+#  
+#  TODO: License for Package HelloEfi
+#  
+##
+
+[Defines]
+  DEC_SPECIFICATION = 0x00010005
+  PACKAGE_NAME      = HelloEfi
+  PACKAGE_GUID      = 71c08d44-0d04-11e9-acf5-080027a8373c
+  PACKAGE_VERSION   = 0.1
+
+[Includes]
+  Include
+
+[LibraryClasses]
+
+[Protocols]
+
+[Guids]

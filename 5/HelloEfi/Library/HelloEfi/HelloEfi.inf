@@ -1,0 +1,34 @@
+##
+#    Inf file for HelloEfi.efi
+##
+
+[Defines]
+    INF_VERSION            =0x00010005
+    BASE_NAME              =HelloEfi
+    FILE_GUID              =ef6a784a-f1ee-4f75-ac0b-ba8f0869a2f2
+    MODULE_TYPE            =UEFI_APPLICATION
+    VERSION_STRING         =0.1
+    ENTRY_POINT            =UefiMain
+
+[Sources]
+    HelloEfi.c
+
+[Packages]
+    MdePkg/MdePkg.dec
+    ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+    UefiApplicationEntryPoint
+    UefiLib
+
+[Guids]
+
+[Ppis]
+
+[Protocols]
+    gEfiShellProtocolGuid                  ## CONSUMES
+
+[FeaturePcd]
+
+[Pcd]
+
