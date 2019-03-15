@@ -13,13 +13,21 @@
 void InitWinSockLibrary();
 SOCKET GetNewSocket();
 
+void InitSocketForReading(SOCKET& socket_for_reading, const int my_port);
 void RecieveAndPrintMessages(const int my_port, std::ostream& out_stream);
+
+void InitSocketForWriting(
+    SOCKET& socket_for_writing,
+    const std::string& remote_ip_address, const int remote_port
+);
 void ReadAndSendMessages(
     std::istream& in_stream,
     const std::string& remote_ip_address, const int remote_port
 );
 
 int GetPort(std::istream& in_stream);
+std::string GetIPAddress(std::istream& in_stream);
+
 void ExitProgram(const int error_code);
 
 
