@@ -8,13 +8,7 @@ Matrix::Matrix(const size_t height, const size_t width)
     data_.reserve(height);
     for (size_t i = 0; i < height; i++)
     {
-        std::vector<int> temp_vector;
-        temp_vector.reserve(width);
-        for (size_t j = 0; j < width; j++)
-        {
-            temp_vector.push_back(0);
-        }
-        data_.push_back(std::move(temp_vector));
+        data_.push_back(std::vector<int>(width, 0));
     }
 }
 
@@ -39,10 +33,8 @@ size_t Matrix::GetWidth() const
 
 int Matrix::GetValue(const size_t height_index, const size_t width_index) const
 {
-    if (height_index >= GetHeight() || width_index >= GetWidth())
-    {
-        throw std::out_of_range("out of range");
-    }
+    assert(height_index < GetHeight());
+    assert(width_index < GetWidth());
 
     return data_[height_index][width_index];
 }
@@ -52,10 +44,8 @@ int Matrix::GetValue(const size_t height_index, const size_t width_index) const
 void Matrix::SetValue(const size_t height_index, const size_t width_index,
                       const int value)
 {
-    if (height_index >= GetHeight() || width_index >= GetWidth())
-    {
-        throw std::out_of_range("out of range");
-    }
+    assert(height_index < GetHeight());
+    assert(width_index < GetWidth());
 
     data_[height_index][width_index] = value;
 }
@@ -88,7 +78,6 @@ std::vector<std::vector<int>> MultiplyMatricesPiece(
 
     std::vector<std::vector<int>> res;
     res.reserve(end_row - begin_row);
-    //std::cerr << "Thread: " << begin_row << " - " << end_row << " started" << std::endl;
 
     for (size_t y = begin_row; y < end_row; y++)
     {
@@ -102,117 +91,108 @@ std::vector<std::vector<int>> MultiplyMatricesPiece(
                 res_single_element += lhs.GetValue(y, i) * rhs_transposed.GetValue(x, i);
             }
             res.back().push_back(res_single_element);
-            //res.SetValue(y, x, res_single_element);
         }
     }
 
-    //std::cerr << "Thread: " << begin_row << " - " << end_row << " finished" << std::endl;
     return res;
 }
 
 
 
-Matrix Matrix::operator*(Matrix& rhs)
+Matrix Matrix::MultiplyNaive(const Matrix& rhs)
 {
-    if (GetWidth() == 0)
+    assert(GetWidth() == rhs.GetHeight());
+
+    Matrix res(GetHeight(), rhs.GetWidth());
+    for (size_t y = 0; y < GetHeight(); y++)
     {
-        if (rhs.GetWidth() != 0)
+        for (size_t x = 0; x < rhs.GetWidth(); x++)
         {
-            throw std::logic_error("Incopatible sizes of matrices");
+            int res_single_element = 0;
+            for (size_t i = 0; i < GetWidth(); i++)
+            {
+                res_single_element += data_[y][i] * rhs.GetValue(i, x);
+            }
+            res.SetValue(y, x, res_single_element);
         }
-        return Matrix(0, 0);
+    }
+    return res;
+}
+
+
+
+Matrix Matrix::MultiplyCacheFriendly(const Matrix& rhs)
+{
+    assert(GetWidth() == rhs.GetHeight());
+
+    Matrix res(GetHeight(), rhs.GetWidth());
+    const Matrix rhs_transposed = rhs.Transpose();
+    for (size_t y = 0; y < GetHeight(); y++)
+    {
+        for (size_t x = 0; x < rhs.GetWidth(); x++)
+        {
+            int res_single_element = 0;
+            for (size_t i = 0; i < GetWidth(); i++)
+            {
+                res_single_element += GetValue(y, i) * rhs_transposed.GetValue(x, i);
+            }
+            res.SetValue(y, x, res_single_element);
+        }
+    }
+    return res;
+}
+
+
+
+Matrix Matrix::MultiplyParallel(const Matrix& rhs)
+{
+    assert(GetWidth() == rhs.GetHeight());
+
+    const Matrix rhs_transposed = rhs.Transpose();
+    const size_t threads_count = 3;
+    std::vector<std::future<std::vector<std::vector<int>>>> res_pieces;
+    res_pieces.reserve(threads_count);
+    std::vector<std::vector<int>> last_piece;
+
+    for (size_t i = 0; i < threads_count; i++)
+    {
+        const size_t piece_size = GetHeight() / threads_count;
+        const size_t begin_row = i * piece_size;
+        const size_t end_row = (i + 1 == threads_count) ?
+            GetHeight() : (i + 1) * piece_size;
+
+        if (i + 1 != threads_count)
+        {
+            res_pieces.emplace_back(std::async(
+                std::launch::async, MultiplyMatricesPiece,
+                *this, rhs_transposed, begin_row, end_row
+            ));
+        }
+        else
+        {
+            last_piece = MultiplyMatricesPiece(
+                *this, rhs_transposed, begin_row, end_row
+            );
+        }
     }
 
-    if (GetWidth() != rhs.GetHeight())
+    Matrix res(GetHeight(), rhs.GetWidth());
+    size_t row_index = 0;
+    for (size_t i = 0; i < threads_count; i++)
     {
-        throw std::logic_error("Incopatible sizes of matrices");
+        const auto& res_piece = (i + 1 == threads_count) ?
+            last_piece : res_pieces[i].get();
+        for (size_t y = 0; y < res_piece.size(); y++)
+        {
+            for (size_t x = 0; x < res_piece[y].size(); x++)
+            {
+                res.SetValue(row_index, x, res_piece[y][x]);
+            }
+            row_index++;
+        }
     }
 
-    /*{
-        LOG_DURATION("No cache-friendly");
-        Matrix res(GetHeight(), rhs.GetWidth());
-        for (size_t y = 0; y < GetHeight(); y++)
-        {
-            for (size_t x = 0; x < rhs.GetWidth(); x++)
-            {
-                int res_single_element = 0;
-                for (size_t i = 0; i < GetWidth(); i++)
-                {
-                    res_single_element += data_[y][i] * rhs.GetValue(i, x);
-                }
-                res.SetValue(y, x, res_single_element);
-            }
-        }
-        return res;
-    }*/
-    
-    /*{
-        LOG_DURATION("cache-friendly");
-        Matrix res(GetHeight(), rhs.GetWidth());
-        const Matrix rhs_transposed = rhs.Transpose();
-        for (size_t y = 0; y < GetHeight(); y++)
-        {
-            for (size_t x = 0; x < rhs.GetWidth(); x++)
-            {
-                int res_single_element = 0;
-                for (size_t i = 0; i < GetWidth(); i++)
-                {
-                    res_single_element += GetValue(y, i) * rhs_transposed.GetValue(x, i);
-                }
-                res.SetValue(y, x, res_single_element);
-            }
-        }
-        return res;
-    }*/
-
-    {
-        LOG_DURATION("parallel");
-        const Matrix rhs_transposed = rhs.Transpose();
-        const size_t threads_count = 8;
-        std::vector<std::future<std::vector<std::vector<int>>>> res_pieces;
-        res_pieces.reserve(threads_count);
-        std::vector<std::vector<int>> last_piece;
-
-        for (size_t i = 0; i < threads_count; i++)
-        {
-            const size_t piece_size = GetHeight() / threads_count;
-            const size_t begin_row = i * piece_size;
-            const size_t end_row = (i + 1 == threads_count) ?
-                GetHeight() : (i + 1) * piece_size;
-
-            if (i + 1 != threads_count)
-            {
-                res_pieces.emplace_back(std::async(
-                    std::launch::async, MultiplyMatricesPiece,
-                    *this, rhs_transposed, begin_row, end_row
-                ));
-            }
-            else
-            {
-                last_piece = MultiplyMatricesPiece(
-                    *this, rhs_transposed, begin_row, end_row
-                );
-            }
-        }
-
-        Matrix res(GetHeight(), rhs.GetWidth());
-        size_t row_index = 0;
-        for (size_t i = 0; i < threads_count; i++)
-        {
-            const auto& res_piece = (i + 1 == threads_count) ?
-                last_piece : res_pieces[i].get();
-            for (size_t y = 0; y < res_piece.size(); y++)
-            {
-                for (size_t x = 0; x < res_piece[y].size(); x++)
-                {
-                    res.SetValue(row_index, x, res_piece[y][x]);
-                }
-                row_index++;
-            }
-        }
-
-        return res;
-    }
+    return res;
 }
 
 

@@ -13,6 +13,7 @@ class Matrix
 {
     friend std::istream& operator>>(std::istream& input_stream, Matrix& matrix);
 
+
 public: 
     Matrix(const size_t height, const size_t width);
 
@@ -25,7 +26,10 @@ public:
 
     Matrix Transpose() const;
 
-    Matrix operator*(Matrix& rhs);
+    Matrix MultiplyNaive(const Matrix& rhs);
+    Matrix MultiplyCacheFriendly(const Matrix& rhs);
+    Matrix MultiplyParallel(const Matrix& rhs);
+
 
 private:
     std::vector<std::vector<int>> data_;
